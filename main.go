@@ -8,7 +8,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/hashicorp/go-multierror"
 	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
-	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/pkg/resolution/resolver/bundle"
 	"sigs.k8s.io/yaml"
 )
@@ -63,7 +62,7 @@ func main() {
 				os.Exit(1)
 			}
 
-			var t v1beta1.Task
+			var t v1.Task
 			if err := yaml.Unmarshal(resolvedResource.Data(), &t); err != nil {
 				fmt.Printf("ERROR: %s\n", err)
 				os.Exit(1)
@@ -84,7 +83,7 @@ func main() {
 	fmt.Println("Success \\o/")
 }
 
-func validatePipelineTaskParameters(pipelineTaskParams []v1.Param, taskParams []v1beta1.ParamSpec) error {
+func validatePipelineTaskParameters(pipelineTaskParams []v1.Param, taskParams []v1.ParamSpec) error {
 	var result error
 	for _, pipelineTaskParam := range pipelineTaskParams {
 		taskParam, found := getTaskParam(pipelineTaskParam.Name, taskParams)
@@ -135,11 +134,11 @@ func getPipelineTaskParam(name string, pipelineTaskParams []v1.Param) (v1.Param,
 	return v1.Param{}, false
 }
 
-func getTaskParam(name string, taskParams []v1beta1.ParamSpec) (v1beta1.ParamSpec, bool) {
+func getTaskParam(name string, taskParams []v1.ParamSpec) (v1.ParamSpec, bool) {
 	for _, taskParam := range taskParams {
 		if taskParam.Name == name {
 			return taskParam, true
 		}
 	}
-	return v1beta1.ParamSpec{}, false
+	return v1.ParamSpec{}, false
 }
