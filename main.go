@@ -26,11 +26,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: Check that it is indeed a Pipeline before proceeding.
-
 	var p v1.Pipeline
 	if err := yaml.Unmarshal(f, &p); err != nil {
 		fmt.Printf("ERROR: %s\n", err)
+		os.Exit(1)
+	}
+
+	if p.Kind != "Pipeline" || p.APIVersion != "tekton.dev/v1" {
+		fmt.Printf("ERROR: want tekton.dev/v1 Pipeline, got %s %s", p.APIVersion, p.Kind)
 		os.Exit(1)
 	}
 
