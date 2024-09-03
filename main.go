@@ -46,7 +46,7 @@ func main() {
 			os.Exit(1)
 		}
 	default:
-		fmt.Printf("ERROR: %s is not supported", key)
+		fmt.Printf("ERROR: %s is not supported\n", key)
 		os.Exit(1)
 	}
 
