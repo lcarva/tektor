@@ -1,4 +1,4 @@
-module github.com/lcarva/tekton-lint
+module github.com/lcarva/tektor
 
 go 1.22.0
 

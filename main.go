@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lcarva/tekton-lint/internal/validator"
+	"github.com/lcarva/tektor/internal/validator"
 	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
