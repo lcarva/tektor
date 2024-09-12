@@ -41,7 +41,16 @@ func main() {
 			os.Exit(1)
 		}
 		if err := validator.ValidatePipeline(ctx, p); err != nil {
-			// TODO: Print to stderr
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	case "tekton.dev/v1/PipelineRun":
+		var pr v1.PipelineRun
+		if err := yaml.Unmarshal(f, &pr); err != nil {
+			fmt.Printf("ERROR: %s\n", err)
+			os.Exit(1)
+		}
+		if err := validator.ValidatePipelineRun(ctx, pr); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
