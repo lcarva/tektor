@@ -3,8 +3,10 @@ package validator
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/hashicorp/go-multierror"
 	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"github.com/tektoncd/pipeline/pkg/resolution/resolver/bundle"
 	"sigs.k8s.io/yaml"
@@ -13,9 +15,25 @@ import (
 func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 
 	if err := p.Validate(ctx); err != nil {
-		// TODO: These errors are quite cryptic. Find a way to make them nicer.
-		return err
+		var allErrors error
+		for _, e := range err.WrappedErrors() {
+			details := e.Details
+			if len(details) > 0 {
+				details = " " + details
+			}
+			message := strings.TrimSuffix(e.Message, ": ")
+			for _, p := range e.Paths {
+				allErrors = multierror.Append(allErrors, fmt.Errorf("%v: %v%v", message, p, details))
+			}
+			if len(e.Paths) == 0 {
+				allErrors = multierror.Append(allErrors, fmt.Errorf("%v: %v", message, details))
+			}
+		}
+		return allErrors
 	}
+
+	allTaskResults := map[string][]v1.TaskResult{}
+	allTaskResultRefs := map[string][]*v1.ResultRef{}
 
 	for i, pipelineTask := range p.Spec.Tasks {
 		fmt.Printf("%d: %s\n", i, pipelineTask.Name)
@@ -44,6 +62,10 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 			}
 
 			paramSpecs = t.Spec.Params
+
+			allTaskResults[pipelineTask.Name] = t.Spec.Results
+			allTaskResultRefs[pipelineTask.Name] = v1.PipelineTaskResultRefs(&pipelineTask)
+
 		}
 		// TODO: Add support for other resolvers and embedded task definitions.
 
@@ -52,7 +74,22 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 		}
 
 		// TODO: Validate workspaces.
-		// TODO: Validate params and results usage.
+	}
+
+	// Verify result references in PipelineTasks are valid.
+	for pipelineTaskName, resultRefs := range allTaskResultRefs {
+		if err := ValidateResults(resultRefs, allTaskResults); err != nil {
+			return fmt.Errorf("%s PipelineTask results: %w", pipelineTaskName, err)
+		}
+	}
+
+	// Verify result references in Pipeline are valid.
+	for _, pipelineResult := range p.Spec.Results {
+		expressions, _ := pipelineResult.GetVarSubstitutionExpressions()
+		resultRefs := v1.NewResultRefs(expressions)
+		if err := ValidateResults(resultRefs, allTaskResults); err != nil {
+			return fmt.Errorf("pipeline results: %w", err)
+		}
 	}
 
 	return nil
