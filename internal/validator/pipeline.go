@@ -35,6 +35,7 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 	allTaskResults := map[string][]v1.TaskResult{}
 	allTaskResultRefs := map[string][]*v1.ResultRef{}
 
+	// TODO: Check finally Tasks as well.
 	for i, pipelineTask := range p.Spec.Tasks {
 		fmt.Printf("%d: %s\n", i, pipelineTask.Name)
 		params := pipelineTask.Params

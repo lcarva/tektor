@@ -7,7 +7,9 @@ toolchain go1.22.6
 require (
 	github.com/google/go-containerregistry v0.19.2
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/spf13/cobra v1.8.1
 	github.com/tektoncd/pipeline v0.62.1
+	k8s.io/apimachinery v0.31.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -77,6 +79,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -122,7 +125,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.29.6 // indirect
-	k8s.io/apimachinery v0.31.0 // indirect
 	k8s.io/client-go v0.29.6 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
