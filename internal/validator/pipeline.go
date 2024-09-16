@@ -82,11 +82,7 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 
 func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask) (*v1.TaskSpec, error) {
 	if pipelineTask.TaskRef != nil && pipelineTask.TaskRef.Resolver == "bundles" {
-		var params []v1.Param
-		params = append(params, pipelineTask.TaskRef.Params...)
-		// TODO: Do this only if the SA param is not set.
-		params = append(params, v1.Param{Name: bundle.ParamServiceAccount, Value: *v1.NewStructuredValues("none")})
-		opts, err := bundle.OptionsFromParams(ctx, params)
+		opts, err := bundleResolverOptions(ctx, pipelineTask.TaskRef.Params)
 		if err != nil {
 			return nil, err
 		}
@@ -105,4 +101,26 @@ func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask)
 	// TODO: Add support for other resolvers and embedded task definitions.
 
 	return nil, errors.New("unable to retrieve spec for pipeline task")
+}
+
+func bundleResolverOptions(ctx context.Context, params v1.Params) (bundle.RequestOptions, error) {
+	var allParams v1.Params
+
+	// The "serviceAccount" param is required by the resolver, but it's rarely ever set on a
+	// Pipeline definitions. Add a default value if one is not set.
+	hasSAParam := false
+	for _, p := range params {
+		if p.Name == bundle.ParamServiceAccount {
+			hasSAParam = true
+			break
+		}
+	}
+	if !hasSAParam {
+		allParams = append(allParams, v1.Param{
+			Name: bundle.ParamServiceAccount, Value: *v1.NewStructuredValues("none"),
+		})
+	}
+
+	allParams = append(allParams, params...)
+	return bundle.OptionsFromParams(ctx, allParams)
 }
