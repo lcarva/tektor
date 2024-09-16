@@ -2,6 +2,7 @@ package validator
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -35,40 +36,23 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 	allTaskResults := map[string][]v1.TaskResult{}
 	allTaskResultRefs := map[string][]*v1.ResultRef{}
 
-	// TODO: Check finally Tasks as well.
-	for i, pipelineTask := range p.Spec.Tasks {
+	pipelineTasks := make([]v1.PipelineTask, 0, len(p.Spec.Tasks)+len(p.Spec.Finally))
+	pipelineTasks = append(pipelineTasks, p.Spec.Tasks...)
+	pipelineTasks = append(pipelineTasks, p.Spec.Finally...)
+
+	for i, pipelineTask := range pipelineTasks {
+		// TODO: Change this to logging.
 		fmt.Printf("%d: %s\n", i, pipelineTask.Name)
+		allTaskResultRefs[pipelineTask.Name] = v1.PipelineTaskResultRefs(&pipelineTask)
 		params := pipelineTask.Params
-		var paramSpecs v1.ParamSpecs
 
-		if pipelineTask.TaskRef != nil && pipelineTask.TaskRef.Resolver == "bundles" {
-			var params []v1.Param
-			params = append(params, pipelineTask.TaskRef.Params...)
-			// TODO: Do this only if the SA param is not set.
-			params = append(params, v1.Param{Name: bundle.ParamServiceAccount, Value: *v1.NewStructuredValues("none")})
-			opts, err := bundle.OptionsFromParams(ctx, params)
-			if err != nil {
-				return err
-			}
-			// TODO: Use local credentials
-			var keychain authn.Keychain
-			resolvedResource, err := bundle.GetEntry(ctx, keychain, opts)
-			if err != nil {
-				return err
-			}
-
-			var t v1.Task
-			if err := yaml.Unmarshal(resolvedResource.Data(), &t); err != nil {
-				return err
-			}
-
-			paramSpecs = t.Spec.Params
-
-			allTaskResults[pipelineTask.Name] = t.Spec.Results
-			allTaskResultRefs[pipelineTask.Name] = v1.PipelineTaskResultRefs(&pipelineTask)
-
+		taskSpec, err := taskSpecFromPipelineTask(ctx, pipelineTask)
+		if err != nil {
+			return fmt.Errorf("retrieving task spec from %s pipeline task: %w", pipelineTask.Name, err)
 		}
-		// TODO: Add support for other resolvers and embedded task definitions.
+
+		paramSpecs := taskSpec.Params
+		allTaskResults[pipelineTask.Name] = taskSpec.Results
 
 		if err := ValidateParameters(params, paramSpecs); err != nil {
 			return fmt.Errorf("ERROR: %s PipelineTask: %s", pipelineTask.Name, err)
@@ -94,4 +78,33 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 	}
 
 	return nil
+}
+
+func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask) (*v1.TaskSpec, error) {
+	if pipelineTask.TaskRef != nil && pipelineTask.TaskRef.Resolver == "bundles" {
+		var params []v1.Param
+		params = append(params, pipelineTask.TaskRef.Params...)
+		// TODO: Do this only if the SA param is not set.
+		params = append(params, v1.Param{Name: bundle.ParamServiceAccount, Value: *v1.NewStructuredValues("none")})
+		opts, err := bundle.OptionsFromParams(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		// TODO: Use local credentials
+		var keychain authn.Keychain
+		resolvedResource, err := bundle.GetEntry(ctx, keychain, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		var t v1.Task
+		if err := yaml.Unmarshal(resolvedResource.Data(), &t); err != nil {
+			return nil, err
+		}
+
+		return &t.Spec, nil
+	}
+	// TODO: Add support for other resolvers and embedded task definitions.
+
+	return nil, errors.New("unable to retrieve spec for pipeline task")
 }
