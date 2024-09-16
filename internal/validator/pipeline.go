@@ -41,7 +41,6 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 	pipelineTasks = append(pipelineTasks, p.Spec.Finally...)
 
 	for i, pipelineTask := range pipelineTasks {
-		// TODO: Change this to logging.
 		fmt.Printf("%d: %s\n", i, pipelineTask.Name)
 		allTaskResultRefs[pipelineTask.Name] = v1.PipelineTaskResultRefs(&pipelineTask)
 		params := pipelineTask.Params
@@ -57,8 +56,6 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 		if err := ValidateParameters(params, paramSpecs); err != nil {
 			return fmt.Errorf("ERROR: %s PipelineTask: %s", pipelineTask.Name, err)
 		}
-
-		// TODO: Validate workspaces.
 	}
 
 	// Verify result references in PipelineTasks are valid.
@@ -107,9 +104,6 @@ func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask)
 
 		return &t.Spec, nil
 	}
-
-	// TODO: Leverage files from pipelinesascode.tekton.dev/task annotation, and all of `.tekton` directory
-	// TODO: Add support for other resolvers and embedded task definitions.
 
 	return nil, errors.New("unable to retrieve spec for pipeline task")
 }

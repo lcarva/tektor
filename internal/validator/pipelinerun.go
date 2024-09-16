@@ -39,9 +39,5 @@ func ValidatePipelineRun(ctx context.Context, pr v1.PipelineRun) error {
 			return err
 		}
 	}
-
-	// TODO: Validate PipelineRun parameters
-	// TODO: Validate PipelineRun workspaces
-
 	return nil
 }

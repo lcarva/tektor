@@ -22,7 +22,6 @@ func ValidateResults(resultRefs []*v1.ResultRef, allTaskResults map[string][]v1.
 		if result == nil {
 			return fmt.Errorf("non-existent %s result from %s PipelineTask", resultRef.Result, resultRef.PipelineTask)
 		}
-		// TODO: Validate type
 	}
 	return nil
 }
