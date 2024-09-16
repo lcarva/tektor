@@ -90,9 +90,7 @@ func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask)
 		if err != nil {
 			return nil, err
 		}
-		// TODO: Use local credentials
-		var keychain authn.Keychain
-		resolvedResource, err := bundle.GetEntry(ctx, keychain, opts)
+		resolvedResource, err := bundle.GetEntry(ctx, authn.DefaultKeychain, opts)
 		if err != nil {
 			return nil, err
 		}
