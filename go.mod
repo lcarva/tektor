@@ -1,6 +1,6 @@
 module github.com/lcarva/tektor
 
-go 1.22.0
+go 1.22.3
 
 toolchain go1.22.6
 
@@ -10,6 +10,7 @@ require (
 	github.com/openshift-pipelines/pipelines-as-code v0.17.7
 	github.com/spf13/cobra v1.8.1
 	github.com/tektoncd/pipeline v0.63.0
+	go.uber.org/zap v1.27.0
 	k8s.io/apimachinery v0.31.1
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -118,7 +119,6 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/net v0.29.0 // indirect
