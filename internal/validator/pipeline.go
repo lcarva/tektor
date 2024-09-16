@@ -106,8 +106,8 @@ func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask)
 func bundleResolverOptions(ctx context.Context, params v1.Params) (bundle.RequestOptions, error) {
 	var allParams v1.Params
 
-	// The "serviceAccount" param is required by the resolver, but it's rarely ever set on a
-	// Pipeline definitions. Add a default value if one is not set.
+	// The "serviceAccount" param is required by the resolver, but it's rarely ever set on Pipeline
+	// definitions. Add a default value if one is not set.
 	hasSAParam := false
 	for _, p := range params {
 		if p.Name == bundle.ParamServiceAccount {
