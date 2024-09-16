@@ -81,6 +81,15 @@ func ValidatePipeline(ctx context.Context, p v1.Pipeline) error {
 }
 
 func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask) (*v1.TaskSpec, error) {
+	// Embedded task spec
+	if pipelineTask.TaskSpec != nil {
+		// Custom Tasks are not supported
+		if pipelineTask.TaskSpec.IsCustomTask() {
+			return nil, errors.New("custom Tasks are not supported")
+		}
+		return &pipelineTask.TaskSpec.TaskSpec, nil
+	}
+
 	if pipelineTask.TaskRef != nil && pipelineTask.TaskRef.Resolver == "bundles" {
 		opts, err := bundleResolverOptions(ctx, pipelineTask.TaskRef.Params)
 		if err != nil {
@@ -98,6 +107,8 @@ func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask)
 
 		return &t.Spec, nil
 	}
+
+	// TODO: Leverage files from pipelinesascode.tekton.dev/task annotation, and all of `.tekton` directory
 	// TODO: Add support for other resolvers and embedded task definitions.
 
 	return nil, errors.New("unable to retrieve spec for pipeline task")
