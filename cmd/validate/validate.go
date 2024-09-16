@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/openshift-pipelines/pipelines-as-code/pkg/cli"
+	"github.com/openshift-pipelines/pipelines-as-code/pkg/cmd/tknpac/resolve"
+	"github.com/openshift-pipelines/pipelines-as-code/pkg/params"
 	"github.com/spf13/cobra"
 	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,6 +52,14 @@ func run(ctx context.Context, fname string) error {
 		if err := yaml.Unmarshal(f, &pr); err != nil {
 			return fmt.Errorf("unmarshalling %s as %s: %w", fname, key, err)
 		}
+
+		// TODO: Run it through PaC. Similar to:
+		// 	tkn pac resolve -f <input> --no-generate-name -o <output>
+		// Use the resolved file going forward.
+		clients := params.New()
+		ioStreams := cli.NewIOStreams()
+		resolve.Command(clients, ioStreams)
+
 		if err := validator.ValidatePipelineRun(ctx, pr); err != nil {
 			return err
 		}
