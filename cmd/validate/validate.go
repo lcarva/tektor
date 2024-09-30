@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
@@ -25,6 +26,7 @@ var ValidateCmd = &cobra.Command{
 }
 
 func run(ctx context.Context, fname string) error {
+	fmt.Printf("Validating %s\n", fname)
 	f, err := os.ReadFile(fname)
 	if err != nil {
 		return fmt.Errorf("reading %s: %w", fname, err)
@@ -57,6 +59,22 @@ func run(ctx context.Context, fname string) error {
 		}
 
 		if err := validator.ValidatePipelineRun(ctx, pr); err != nil {
+			return err
+		}
+	case "tekton.dev/v1/Task":
+		var t v1.Task
+		if err := yaml.Unmarshal(f, &t); err != nil {
+			return fmt.Errorf("unmarshaling %s as %s: %w", fname, key, err)
+		}
+		if err := validator.ValidateTaskV1(ctx, t); err != nil {
+			return err
+		}
+	case "tekton.dev/v1beta1/Task":
+		var t v1beta1.Task
+		if err := yaml.Unmarshal(f, &t); err != nil {
+			return fmt.Errorf("unmarshaling %s as %s: %w", fname, key, err)
+		}
+		if err := validator.ValidateTaskV1Beta1(ctx, t); err != nil {
 			return err
 		}
 	default:
