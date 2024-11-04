@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"github.com/tektoncd/pipeline/pkg/resolution/resolver/bundle"
+	"github.com/tektoncd/pipeline/pkg/resolution/resolver/git"
 	"sigs.k8s.io/yaml"
 )
 
@@ -93,6 +94,25 @@ func taskSpecFromPipelineTask(ctx context.Context, pipelineTask v1.PipelineTask)
 			return nil, err
 		}
 		resolvedResource, err := bundle.GetEntry(ctx, authn.DefaultKeychain, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		var t v1.Task
+		if err := yaml.Unmarshal(resolvedResource.Data(), &t); err != nil {
+			return nil, err
+		}
+
+		return &t.Spec, nil
+	}
+
+	if pipelineTask.TaskRef != nil && pipelineTask.TaskRef.Resolver == "git" {
+		params, err := git.PopulateDefaultParams(ctx, pipelineTask.TaskRef.Params)
+		if err != nil {
+			return nil, err
+		}
+
+		resolvedResource, err := git.ResolveAnonymousGit(ctx, params)
 		if err != nil {
 			return nil, err
 		}
